@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Login from "./Login";
 import "./App.css";
+import ManualEntry from "./ManualEntry";
 
 export default function App() {
   const [userName, setUserName] = useState("");
+  const [currentScreen, setCurrentScreen] = useState("home");
 
   useEffect(() => {
     const savedName = localStorage.getItem("userName");
@@ -19,6 +21,126 @@ export default function App() {
 
   if (!userName) {
     return <Login />;
+  }
+  // Show Manual Entry screen
+  if (currentScreen === "manual") {
+    return (
+      <ManualEntry
+        onBack={() => setCurrentScreen("home")}
+        onSelect={(product) => {
+          console.log("Selected:", product);
+          // Later we'll show results page
+          setCurrentScreen("home"); // For now, go back to home
+        }}
+      />
+    );
+  }
+
+  // Show placeholder screens for other buttons
+  if (currentScreen === "scanner") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f9fafb",
+        }}
+      >
+        <div style={{ fontSize: "64px", marginBottom: "24px" }}>📷</div>
+        <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>
+          Scanner Coming Soon
+        </h2>
+        <p style={{ color: "#6b7280", marginBottom: "24px" }}>
+          Person A will build this!
+        </p>
+        <button
+          onClick={() => setCurrentScreen("home")}
+          style={{
+            background: "#10b981",
+            color: "white",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            fontSize: "16px",
+            cursor: "pointer",
+          }}
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  if (currentScreen === "records") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f9fafb",
+        }}
+      >
+        <div style={{ fontSize: "64px", marginBottom: "24px" }}>📊</div>
+        <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>
+          Records Coming Soon
+        </h2>
+        <button
+          onClick={() => setCurrentScreen("home")}
+          style={{
+            background: "#a855f7",
+            color: "white",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            fontSize: "16px",
+            cursor: "pointer",
+          }}
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  if (currentScreen === "premium") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(to bottom right, #fbbf24, #f97316)",
+        }}
+      >
+        <div style={{ fontSize: "64px", marginBottom: "24px" }}>👑</div>
+        <h2 style={{ fontSize: "24px", marginBottom: "16px", color: "white" }}>
+          Premium Coming Soon
+        </h2>
+        <button
+          onClick={() => setCurrentScreen("home")}
+          style={{
+            background: "white",
+            color: "#f97316",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            fontSize: "16px",
+            cursor: "pointer",
+            fontWeight: "600",
+          }}
+        >
+          Back to Home
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -96,6 +218,7 @@ export default function App() {
         {/* Scan Barcode Button with Animation */}
         <div
           className="animate-slide-in"
+          onClick={() => setCurrentScreen("scanner")}
           style={{
             background: "white",
             borderRadius: "16px",
@@ -149,6 +272,7 @@ export default function App() {
         {/* Enter Manually Button with Animation */}
         <div
           className="animate-slide-in"
+          onClick={() => setCurrentScreen("manual")}
           style={{
             background: "white",
             borderRadius: "16px",
@@ -203,6 +327,7 @@ export default function App() {
         {/* My Records Button with Animation */}
         <div
           className="animate-slide-in"
+          onClick={() => setCurrentScreen("records")}
           style={{
             background: "white",
             borderRadius: "16px",
@@ -257,6 +382,7 @@ export default function App() {
         {/* Premium Button with Animation */}
         <div
           className="animate-slide-in"
+          onClick={() => setCurrentScreen("premium")}
           style={{
             background: "linear-gradient(to right, #fbbf24, #f97316)",
             borderRadius: "16px",
