@@ -3,12 +3,14 @@ import Login from "./Login";
 import "./App.css";
 import ManualEntry from "./ManualEntry";
 import Results from "./Results";
-import Scanner from './Scanner';
+import Scanner from "./Scanner";
+import Records from "./Records";
 
 export default function App() {
   const [userName, setUserName] = useState("");
   const [currentScreen, setCurrentScreen] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const savedName = localStorage.getItem("userName");
@@ -16,15 +18,83 @@ export default function App() {
       setUserName(savedName);
     }
   }, []);
+  const getTodayTotal = () => {
+    const saved = localStorage.getItem("foodHistory");
+    if (!saved) return 0;
+
+    try {
+      const history = JSON.parse(saved);
+      const today = new Date().toDateString();
+
+      const todayItems = history.filter((item) => {
+        return new Date(item.timestamp).toDateString() === today;
+      });
+
+      return todayItems.reduce(
+        (sum, item) => sum + (item.product.calories || 0),
+        0
+      );
+    } catch {
+      return 0;
+    }
+  };
+
+  const todayTotal = getTodayTotal();
 
   const handleLogout = () => {
     localStorage.removeItem("userName");
     setUserName("");
   };
+  const saveToHistory = (product, method) => {
+    try {
+      const existing = localStorage.getItem("foodHistory");
+      const history = existing ? JSON.parse(existing) : [];
+
+      history.push({
+        product,
+        timestamp: new Date().toISOString(),
+        method,
+      });
+
+      localStorage.setItem("foodHistory", JSON.stringify(history));
+      return true;
+    } catch (error) {
+      console.error("Error saving history:", error);
+      alert("❌ Failed to save. Please try again.");
+      return false;
+    }
+  };
 
   if (!userName) {
     return <Login />;
   }
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f9fafb",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px",
+              animation: "pulse 1.5s infinite",
+            }}
+          >
+            🥗
+          </div>
+          <p style={{ color: "#6b7280" }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show Manual Entry screen
   if (currentScreen === "manual") {
     return (
@@ -47,30 +117,37 @@ export default function App() {
           setSelectedProduct(null);
         }}
         onAddToRecords={(product) => {
-          // We'll implement this in Day 5
-          console.log("Added to records:", product);
+          const method =
+            selectedProduct && selectedProduct.barcode ? "scanned" : "manual";
+
+          const success = saveToHistory(product, method);
+
+          if (success) {
+            alert("✅ Added to your records!");
+            setCurrentScreen("records");
+          }
         }}
       />
     );
   }
 
   // Show placeholder screens for other buttons
-  if (currentScreen === 'scanner') {
+  if (currentScreen === "scanner") {
     return (
       <Scanner
-        onBack={() => setCurrentScreen('home')}
+        onBack={() => setCurrentScreen("home")}
         onScanSuccess={(barcode) => {
           // Find product by barcode
-          import('./products.json').then((module) => {
+          import("./products.json").then((module) => {
             const products = module.default;
-            const product = products.find(p => p.barcode === barcode);
-            
+            const product = products.find((p) => p.barcode === barcode);
+
             if (product) {
               setSelectedProduct(product);
-              setCurrentScreen('results');
+              setCurrentScreen("results");
             } else {
-              alert('Product not found in database');
-              setCurrentScreen('home');
+              alert("Product not found in database");
+              setCurrentScreen("home");
             }
           });
         }}
@@ -79,39 +156,8 @@ export default function App() {
   }
 
   if (currentScreen === "records") {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f9fafb",
-        }}
-      >
-        <div style={{ fontSize: "64px", marginBottom: "24px" }}>📊</div>
-        <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>
-          Records Coming Soon
-        </h2>
-        <button
-          onClick={() => setCurrentScreen("home")}
-          style={{
-            background: "#a855f7",
-            color: "white",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-          }}
-        >
-          Back to Home
-        </button>
-      </div>
-    );
+    return <Records onBack={() => setCurrentScreen("home")} />;
   }
-
   if (currentScreen === "premium") {
     return (
       <div
@@ -186,6 +232,22 @@ export default function App() {
             >
               Ready to track your nutrition?
             </p>
+            {todayTotal > 0 && (
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.2)",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  marginTop: "12px",
+                  display: "inline-block",
+                }}
+              >
+                <span style={{ fontSize: "14px" }}>Today: </span>
+                <span style={{ fontSize: "20px", fontWeight: "bold" }}>
+                  {todayTotal} cal
+                </span>
+              </div>
+            )}
           </div>
           <button
             onClick={handleLogout}
