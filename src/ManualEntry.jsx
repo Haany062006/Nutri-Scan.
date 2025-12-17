@@ -1,11 +1,63 @@
 import React, { useState } from "react";
-import productsData from "./products.json";
 
 export default function ManualEntry({ onBack, onSelect }) {
   const [searchText, setSearchText] = useState("");
 
+  // Dummy products for now - will connect to real data later
+  const products = [
+    {
+      name: "Dal (1 bowl)",
+      serving: "200g",
+      calories: 180,
+      protein: 12,
+      carbs: 30,
+      fat: 2,
+      fiber: 8,
+      sugar: 2,
+      allergens: [],
+      category: "homemade",
+    },
+    {
+      name: "Roti (1 piece)",
+      serving: "40g",
+      calories: 120,
+      protein: 3,
+      carbs: 25,
+      fat: 2,
+      fiber: 3,
+      sugar: 1,
+      allergens: ["wheat", "gluten"],
+      category: "homemade",
+    },
+    {
+      name: "Maggi Masala Noodles",
+      brand: "Nestle",
+      serving: "100g",
+      calories: 310,
+      protein: 8.5,
+      carbs: 60,
+      fat: 12,
+      fiber: 2,
+      sugar: 5,
+      allergens: ["wheat", "gluten", "msg"],
+      category: "packaged",
+    },
+    {
+      name: "Apple (1 medium)",
+      serving: "182g",
+      calories: 95,
+      protein: 0.5,
+      carbs: 25,
+      fat: 0.3,
+      fiber: 4,
+      sugar: 19,
+      allergens: [],
+      category: "homemade",
+    },
+  ];
+
   // Filter products based on search
-  const filteredProducts = productsData.filter((p) =>
+  const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
@@ -67,6 +119,8 @@ export default function ManualEntry({ onBack, onSelect }) {
               outline: "none",
               boxSizing: "border-box",
             }}
+            onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
+            onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
           />
         </div>
 
@@ -97,6 +151,18 @@ export default function ManualEntry({ onBack, onSelect }) {
                     borderRadius: "12px",
                     cursor: "pointer",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    border: "2px solid transparent",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#3b82f6";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 6px rgba(0,0,0,0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "transparent";
+                    e.currentTarget.style.boxShadow =
+                      "0 1px 3px rgba(0,0,0,0.1)";
                   }}
                 >
                   <h3
