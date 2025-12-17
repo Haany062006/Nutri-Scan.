@@ -3,6 +3,7 @@ import Login from "./Login";
 import "./App.css";
 import ManualEntry from "./ManualEntry";
 import Results from "./Results";
+import Scanner from './Scanner';
 
 export default function App() {
   const [userName, setUserName] = useState("");
@@ -54,40 +55,26 @@ export default function App() {
   }
 
   // Show placeholder screens for other buttons
-  if (currentScreen === "scanner") {
+  if (currentScreen === 'scanner') {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f9fafb",
+      <Scanner
+        onBack={() => setCurrentScreen('home')}
+        onScanSuccess={(barcode) => {
+          // Find product by barcode
+          import('./products.json').then((module) => {
+            const products = module.default;
+            const product = products.find(p => p.barcode === barcode);
+            
+            if (product) {
+              setSelectedProduct(product);
+              setCurrentScreen('results');
+            } else {
+              alert('Product not found in database');
+              setCurrentScreen('home');
+            }
+          });
         }}
-      >
-        <div style={{ fontSize: "64px", marginBottom: "24px" }}>📷</div>
-        <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>
-          Scanner Coming Soon
-        </h2>
-        <p style={{ color: "#6b7280", marginBottom: "24px" }}>
-          Person A will build this!
-        </p>
-        <button
-          onClick={() => setCurrentScreen("home")}
-          style={{
-            background: "#10b981",
-            color: "white",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-          }}
-        >
-          Back to Home
-        </button>
-      </div>
+      />
     );
   }
 
