@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import Login from "./Login";
 import "./App.css";
 import ManualEntry from "./ManualEntry";
+import Results from "./Results";
 
 export default function App() {
   const [userName, setUserName] = useState("");
   const [currentScreen, setCurrentScreen] = useState("home");
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const savedName = localStorage.getItem("userName");
@@ -28,9 +30,24 @@ export default function App() {
       <ManualEntry
         onBack={() => setCurrentScreen("home")}
         onSelect={(product) => {
-          console.log("Selected:", product);
-          // Later we'll show results page
-          setCurrentScreen("home"); // For now, go back to home
+          setSelectedProduct(product);
+          setCurrentScreen("results");
+        }}
+      />
+    );
+  }
+  // Show Results screen
+  if (currentScreen === "results" && selectedProduct) {
+    return (
+      <Results
+        product={selectedProduct}
+        onBack={() => {
+          setCurrentScreen("home");
+          setSelectedProduct(null);
+        }}
+        onAddToRecords={(product) => {
+          // We'll implement this in Day 5
+          console.log("Added to records:", product);
         }}
       />
     );
