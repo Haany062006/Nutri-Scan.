@@ -5,6 +5,7 @@ import ManualEntry from "./ManualEntry";
 import Results from "./Results";
 import Scanner from "./Scanner";
 import Records from "./Records";
+import Premium from "./Premium";
 
 export default function App() {
   const [userName, setUserName] = useState("");
@@ -82,13 +83,21 @@ export default function App() {
         <div style={{ textAlign: "center" }}>
           <div
             style={{
-              fontSize: "48px",
+              fontSize: "80px",
               marginBottom: "16px",
-              animation: "pulse 1.5s infinite",
+              animation: "bounce 2s infinite",
             }}
           >
             🥗
           </div>
+
+          <style>{`
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+`}</style>
+
           <p style={{ color: "#6b7280" }}>Loading...</p>
         </div>
       </div>
@@ -159,40 +168,8 @@ export default function App() {
     return <Records onBack={() => setCurrentScreen("home")} />;
   }
   if (currentScreen === "premium") {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "linear-gradient(to bottom right, #fbbf24, #f97316)",
-        }}
-      >
-        <div style={{ fontSize: "64px", marginBottom: "24px" }}>👑</div>
-        <h2 style={{ fontSize: "24px", marginBottom: "16px", color: "white" }}>
-          Premium Coming Soon
-        </h2>
-        <button
-          onClick={() => setCurrentScreen("home")}
-          style={{
-            background: "white",
-            color: "#f97316",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-            fontWeight: "600",
-          }}
-        >
-          Back to Home
-        </button>
-      </div>
-    );
+    return <Premium onBack={() => setCurrentScreen("home")} />;
   }
-
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb" }}>
       {/* Header with Animation */}
