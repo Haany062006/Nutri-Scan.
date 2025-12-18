@@ -3,26 +3,103 @@ import Login from "./Login";
 import "./App.css";
 import ManualEntry from "./ManualEntry";
 import Results from "./Results";
+import Scanner from "./Scanner";
+import Records from "./Records";
+import Premium from "./Premium";
 
 export default function App() {
   const [userName, setUserName] = useState("");
   const [currentScreen, setCurrentScreen] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     const savedName = localStorage.getItem("userName");
     if (savedName) {
       setUserName(savedName);
     }
   }, []);
+  // Calculate today's total from localStorage
+  const getTodayTotal = () => {
+    const saved = localStorage.getItem("foodHistory");
+    if (!saved) return 0;
+
+    try {
+      const history = JSON.parse(saved);
+      const today = new Date().toDateString();
+      const todayItems = history.filter((item) => {
+        const itemDate = new Date(item.timestamp);
+        return itemDate.toDateString() === today;
+      });
+
+      return todayItems.reduce(
+        (sum, item) => sum + (item.product.calories || 0),
+        0
+      );
+    } catch {
+      return 0;
+    }
+  };
+
+  const todayTotal = getTodayTotal();
 
   const handleLogout = () => {
     localStorage.removeItem("userName");
     setUserName("");
   };
+  const saveToHistory = (product, method) => {
+    try {
+      const existing = localStorage.getItem("foodHistory");
+      const history = existing ? JSON.parse(existing) : [];
+
+      history.push({
+        product,
+        timestamp: new Date().toISOString(),
+        method,
+      });
+
+      localStorage.setItem("foodHistory", JSON.stringify(history));
+      return true;
+    } catch (error) {
+      console.error("Error saving history:", error);
+      alert("❌ Failed to save. Please try again.");
+      return false;
+    }
+  };
 
   if (!userName) {
     return <Login />;
   }
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f9fafb",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "80px",
+            marginBottom: "16px",
+            animation: "bounce 2s infinite",
+          }}
+        >
+          🥗
+        </div>
+
+        <style>{`
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+`}</style>
+      </div>
+    );
+  }
+
   // Show Manual Entry screen
   if (currentScreen === "manual") {
     return (
@@ -45,8 +122,15 @@ export default function App() {
           setSelectedProduct(null);
         }}
         onAddToRecords={(product) => {
-          // We'll implement this in Day 5
-          console.log("Added to records:", product);
+          const method =
+            selectedProduct && selectedProduct.barcode ? "scanned" : "manual";
+
+          const success = saveToHistory(product, method);
+
+          if (success) {
+            alert("✅ Added to your records!");
+            setCurrentScreen("records");
+          }
         }}
       />
     );
@@ -54,108 +138,40 @@ export default function App() {
   // Show placeholder screens for other buttons
   if (currentScreen === "scanner") {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f9fafb",
+      <Scanner
+        onBack={() => setCurrentScreen("home")}
+        onScanSuccess={(productOrBarcode) => {
+          // Check if it's a formatted product object or just barcode
+          if (typeof productOrBarcode === "object") {
+            // Product from API
+            setSelectedProduct(productOrBarcode);
+            setCurrentScreen("results");
+          } else {
+            // Just barcode - check local database
+            import("./products.json").then((module) => {
+              const products = module.default;
+              const product = products.find(
+                (p) => p.barcode === productOrBarcode
+              );
+
+              if (product) {
+                setSelectedProduct(product);
+                setCurrentScreen("results");
+              } else {
+                alert("Product not found in any database. Try manual entry!");
+                setCurrentScreen("home");
+              }
+            });
+          }
         }}
-      >
-        <div style={{ fontSize: "64px", marginBottom: "24px" }}>📷</div>
-        <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>
-          Scanner Coming Soon
-        </h2>
-        <p style={{ color: "#6b7280", marginBottom: "24px" }}>
-          Person A will build this!
-        </p>
-        <button
-          onClick={() => setCurrentScreen("home")}
-          style={{
-            background: "#10b981",
-            color: "white",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-          }}
-        >
-          Back to Home
-        </button>
-      </div>
+      />
     );
   }
-
   if (currentScreen === "records") {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f9fafb",
-        }}
-      >
-        <div style={{ fontSize: "64px", marginBottom: "24px" }}>📊</div>
-        <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>
-          Records Coming Soon
-        </h2>
-        <button
-          onClick={() => setCurrentScreen("home")}
-          style={{
-            background: "#a855f7",
-            color: "white",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-          }}
-        >
-          Back to Home
-        </button>
-      </div>
-    );
+    return <Records onBack={() => setCurrentScreen("home")} />;
   }
-
   if (currentScreen === "premium") {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "linear-gradient(to bottom right, #fbbf24, #f97316)",
-        }}
-      >
-        <div style={{ fontSize: "64px", marginBottom: "24px" }}>👑</div>
-        <h2 style={{ fontSize: "24px", marginBottom: "16px", color: "white" }}>
-          Premium Coming Soon
-        </h2>
-        <button
-          onClick={() => setCurrentScreen("home")}
-          style={{
-            background: "white",
-            color: "#f97316",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-            fontWeight: "600",
-          }}
-        >
-          Back to Home
-        </button>
-      </div>
-    );
+    return <Premium onBack={() => setCurrentScreen("home")} />;
   }
 
   return (
@@ -197,7 +213,24 @@ export default function App() {
             >
               Ready to track your nutrition?
             </p>
+            {todayTotal > 0 && (
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.2)",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  marginTop: "12px",
+                  display: "inline-block",
+                }}
+              >
+                <span style={{ fontSize: "14px" }}>Today: </span>
+                <span style={{ fontSize: "20px", fontWeight: "bold" }}>
+                  {todayTotal} cal
+                </span>
+              </div>
+            )}
           </div>
+
           <button
             onClick={handleLogout}
             style={{
@@ -444,6 +477,18 @@ export default function App() {
             </div>
           </div>
         </div>
+      </div>
+      {/* ADD FOOTER HERE! */}
+      <div
+        style={{
+          textAlign: "center",
+          padding: "24px",
+          color: "#6b7280",
+          fontSize: "12px",
+        }}
+      >
+        <p style={{ margin: "0 0 8px 0" }}>NutriScan v1.0 - Built with ❤️</p>
+        <p style={{ margin: 0 }}>Powered by Open Food Facts API</p>
       </div>
     </div>
   );
