@@ -1,18 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Scanner({ onBack, onScanSuccess }) {
-  const [cameraStatus, setCameraStatus] = useState("loading");
+  const [cameraStatus, setCameraStatus] = useState("loading"); // loading, ready, error
   const [scannedCode, setScannedCode] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const scanIntervalRef = useRef(null);
 
   useEffect(() => {
+    // Request camera permission
     requestCamera();
-    return () => {
-      stopScanning();
-    };
   }, []);
 
   const requestCamera = async () => {
@@ -21,14 +15,14 @@ export default function Scanner({ onBack, onScanSuccess }) {
         video: { facingMode: "environment" },
       });
 
+      // Camera access granted
       setCameraStatus("ready");
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-
-        // Start scanning for barcodes
-        startBarcodeDetection();
+      // Show camera in video element
+      const video = document.getElementById("camera-preview");
+      if (video) {
+        video.srcObject = stream;
+        video.play();
       }
     } catch (error) {
       console.error("Camera error:", error);
@@ -36,95 +30,14 @@ export default function Scanner({ onBack, onScanSuccess }) {
     }
   };
 
-  const startBarcodeDetection = () => {
-    // Use BarcodeDetector API if available
-    if ("BarcodeDetector" in window) {
-      const barcodeDetector = new window.BarcodeDetector({
-        formats: ["ean_13", "ean_8", "upc_a", "upc_e"],
-      });
+  const handleManualEntry = () => {
+    // For testing - simulate scanning
+    const testBarcode = "8901725123456"; // Maggi barcode
+    setScannedCode(testBarcode);
 
-      scanIntervalRef.current = setInterval(async () => {
-        if (
-          videoRef.current &&
-          videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA &&
-          !isProcessing
-        ) {
-          try {
-            const barcodes = await barcodeDetector.detect(videoRef.current);
-            if (barcodes.length > 0) {
-              handleBarcodeDetected(barcodes[0].rawValue);
-            }
-          } catch (err) {
-            console.log("Detection error:", err);
-          }
-        }
-      }, 1000); // Check every second
-    } else {
-      console.log("BarcodeDetector not supported");
-    }
-  };
-
-  const stopScanning = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-    }
-    if (videoRef.current && videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-    }
-  };
-
-  const handleBarcodeDetected = async (barcode) => {
-    if (isProcessing) return;
-
-    setIsProcessing(true);
-    setScannedCode(barcode);
-
-    // Fetch from Open Food Facts API
-    try {
-      const response = await fetch(
-        `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`
-      );
-      const data = await response.json();
-
-      if (data.status === 1) {
-        // Product found in API!
-        const product = data.product;
-        const formattedProduct = {
-          barcode: barcode,
-          name: product.product_name || "Unknown Product",
-          brand: product.brands || null,
-          serving: product.serving_size || "100g",
-          calories: Math.round(product.nutriments["energy-kcal"] || 0),
-          protein: Math.round(product.nutriments.proteins || 0),
-          carbs: Math.round(product.nutriments.carbohydrates || 0),
-          fat: Math.round(product.nutriments.fat || 0),
-          fiber: Math.round(product.nutriments.fiber || 0),
-          sugar: Math.round(product.nutriments.sugars || 0),
-          allergens: product.allergens_tags
-            ? product.allergens_tags.map((a) => a.replace("en:", ""))
-            : [],
-          category: "packaged",
-          imageUrl: product.image_url || null,
-        };
-
-        stopScanning();
-        onScanSuccess(formattedProduct);
-      } else {
-        // Not found in API, try local database
-        alert("Product not found in database. Checking local database...");
-        onScanSuccess(barcode); // Pass barcode to check local
-      }
-    } catch (error) {
-      console.error("API error:", error);
-      alert("Failed to fetch product data. Please try again.");
-      setIsProcessing(false);
-      setScannedCode("");
-    }
-  };
-
-  const handleTestScan = () => {
-    // Test with Maggi barcode
-    handleBarcodeDetected("8901725123456");
+    setTimeout(() => {
+      onScanSuccess(testBarcode);
+    }, 1000);
   };
 
   return (
@@ -150,10 +63,7 @@ export default function Scanner({ onBack, onScanSuccess }) {
         }}
       >
         <button
-          onClick={() => {
-            stopScanning();
-            onBack();
-          }}
+          onClick={onBack}
           style={{
             background: "rgba(255,255,255,0.2)",
             border: "none",
@@ -169,7 +79,7 @@ export default function Scanner({ onBack, onScanSuccess }) {
         <h2 style={{ margin: 0, fontSize: "20px" }}>Scan Barcode</h2>
       </div>
 
-      {/* Camera Preview */}
+      {/* Camera Preview Area */}
       <div
         style={{
           flex: 1,
@@ -180,8 +90,9 @@ export default function Scanner({ onBack, onScanSuccess }) {
           overflow: "hidden",
         }}
       >
+        {/* Video element for camera */}
         <video
-          ref={videoRef}
+          id="camera-preview"
           style={{
             width: "100%",
             height: "100%",
@@ -192,9 +103,7 @@ export default function Scanner({ onBack, onScanSuccess }) {
           autoPlay
         />
 
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-
-        {/* Scanner Frame */}
+        {/* Scanner Frame Overlay */}
         {cameraStatus === "ready" && (
           <div
             style={{
@@ -209,6 +118,7 @@ export default function Scanner({ onBack, onScanSuccess }) {
               boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
             }}
           >
+            {/* Scanning line animation */}
             <div
               style={{
                 position: "absolute",
@@ -223,21 +133,35 @@ export default function Scanner({ onBack, onScanSuccess }) {
           </div>
         )}
 
-        {/* Loading */}
+        {/* Loading State */}
         {cameraStatus === "loading" && (
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📷</div>
+            <div
+              style={{
+                fontSize: "48px",
+                marginBottom: "16px",
+                animation: "pulse 1.5s infinite",
+              }}
+            >
+              📷
+            </div>
             <p>Initializing camera...</p>
           </div>
         )}
 
-        {/* Error */}
+        {/* Error State */}
         {cameraStatus === "error" && (
-          <div style={{ textAlign: "center", padding: "24px" }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "24px",
+              maxWidth: "300px",
+            }}
+          >
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>❌</div>
             <h3>Camera Access Denied</h3>
             <p style={{ color: "#9ca3af", fontSize: "14px" }}>
-              Please enable camera permissions.
+              Please enable camera permissions in your browser settings.
             </p>
             <button
               onClick={requestCamera}
@@ -270,7 +194,7 @@ export default function Scanner({ onBack, onScanSuccess }) {
               fontWeight: "bold",
             }}
           >
-            {isProcessing ? "Fetching data..." : `Found: ${scannedCode}`}
+            Found: {scannedCode}
           </div>
         )}
       </div>
@@ -289,10 +213,10 @@ export default function Scanner({ onBack, onScanSuccess }) {
             : "Waiting for camera..."}
         </p>
 
-        {/* Test Button */}
-        {cameraStatus === "ready" && !isProcessing && (
+        {/* Test Button (for development) */}
+        {cameraStatus === "ready" && (
           <button
-            onClick={handleTestScan}
+            onClick={handleManualEntry}
             style={{
               background: "#3b82f6",
               color: "white",
@@ -305,15 +229,12 @@ export default function Scanner({ onBack, onScanSuccess }) {
               maxWidth: "300px",
             }}
           >
-            Test Scan (Maggi from API)
+            Test Scan (Maggi)
           </button>
         )}
 
         <button
-          onClick={() => {
-            stopScanning();
-            onBack();
-          }}
+          onClick={onBack}
           style={{
             background: "rgba(255,255,255,0.1)",
             color: "white",
@@ -329,10 +250,15 @@ export default function Scanner({ onBack, onScanSuccess }) {
         </button>
       </div>
 
+      {/* Animations */}
       <style>{`
         @keyframes scan {
           0%, 100% { top: 0; }
           50% { top: 100%; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
       `}</style>
     </div>

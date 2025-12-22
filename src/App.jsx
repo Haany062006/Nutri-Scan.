@@ -140,29 +140,20 @@ export default function App() {
     return (
       <Scanner
         onBack={() => setCurrentScreen("home")}
-        onScanSuccess={(productOrBarcode) => {
-          // Check if it's a formatted product object or just barcode
-          if (typeof productOrBarcode === "object") {
-            // Product from API
-            setSelectedProduct(productOrBarcode);
-            setCurrentScreen("results");
-          } else {
-            // Just barcode - check local database
-            import("./products.json").then((module) => {
-              const products = module.default;
-              const product = products.find(
-                (p) => p.barcode === productOrBarcode
-              );
+        onScanSuccess={(barcode) => {
+          // Find product by barcode
+          import("./products.json").then((module) => {
+            const products = module.default;
+            const product = products.find((p) => p.barcode === barcode);
 
-              if (product) {
-                setSelectedProduct(product);
-                setCurrentScreen("results");
-              } else {
-                alert("Product not found in any database. Try manual entry!");
-                setCurrentScreen("home");
-              }
-            });
-          }
+            if (product) {
+              setSelectedProduct(product);
+              setCurrentScreen("results");
+            } else {
+              alert("Product not found in database");
+              setCurrentScreen("home");
+            }
+          });
         }}
       />
     );
