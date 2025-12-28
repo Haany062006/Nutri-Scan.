@@ -1,15 +1,27 @@
 import React, { useState } from "react";
-import { login } from "./api";
+import { signup } from "./api";
 
-export default function Login({ onLoginSuccess, onSwitchToSignup }) {
+export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
+  const handleSignup = async () => {
+    if (!name.trim() || !email.trim() || !password.trim()) {
       setError("Please fill all fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
       return;
     }
 
@@ -17,14 +29,14 @@ export default function Login({ onLoginSuccess, onSwitchToSignup }) {
     setError("");
 
     try {
-      const data = await login(email, password);
+      const data = await signup(name, email, password);
 
       if (data.token) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userName", data.name);
-        onLoginSuccess(data.name);
+        onSignupSuccess(data.name);
       } else {
-        setError(data.message || "Login failed");
+        setError(data.message || "Signup failed");
       }
     } catch (err) {
       setError("Server error. Please try again.");
@@ -64,9 +76,9 @@ export default function Login({ onLoginSuccess, onSwitchToSignup }) {
               margin: "0 0 8px 0",
             }}
           >
-            NutriScan
+            Create Account
           </h1>
-          <p style={{ color: "#6b7280", margin: 0 }}>Welcome Back!</p>
+          <p style={{ color: "#6b7280", margin: 0 }}>Join NutriScan Today</p>
         </div>
 
         {error && (
@@ -84,6 +96,25 @@ export default function Login({ onLoginSuccess, onSwitchToSignup }) {
             {error}
           </div>
         )}
+
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            border: "2px solid #d1d5db",
+            borderRadius: "8px",
+            fontSize: "16px",
+            marginBottom: "12px",
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+          onFocus={(e) => (e.target.style.borderColor = "#10b981")}
+          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+        />
 
         <input
           type="email"
@@ -106,10 +137,29 @@ export default function Login({ onLoginSuccess, onSwitchToSignup }) {
 
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Password (min 6 characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            border: "2px solid #d1d5db",
+            borderRadius: "8px",
+            fontSize: "16px",
+            marginBottom: "12px",
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+          onFocus={(e) => (e.target.style.borderColor = "#10b981")}
+          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+        />
+
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && handleSignup()}
           style={{
             width: "100%",
             padding: "12px 16px",
@@ -125,7 +175,7 @@ export default function Login({ onLoginSuccess, onSwitchToSignup }) {
         />
 
         <button
-          onClick={handleLogin}
+          onClick={handleSignup}
           disabled={loading}
           style={{
             width: "100%",
@@ -135,19 +185,19 @@ export default function Login({ onLoginSuccess, onSwitchToSignup }) {
             fontWeight: "600",
             border: "none",
             cursor: loading ? "not-allowed" : "pointer",
-            background: loading ? "#d1d5db" : "#06b6d4",
+            background: loading ? "#d1d5db" : "#10b981",
             color: "white",
             transition: "all 0.2s",
             marginBottom: "16px",
           }}
           onMouseEnter={(e) => {
-            if (!loading) e.target.style.background = "#0891b2";
+            if (!loading) e.target.style.background = "#059669";
           }}
           onMouseLeave={(e) => {
-            if (!loading) e.target.style.background = "#06b6d4";
+            if (!loading) e.target.style.background = "#10b981";
           }}
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Creating Account..." : "Sign Up"}
         </button>
 
         <p
@@ -158,12 +208,12 @@ export default function Login({ onLoginSuccess, onSwitchToSignup }) {
             margin: 0,
           }}
         >
-          Don't have an account?{" "}
+          Already have an account?{" "}
           <span
-            onClick={onSwitchToSignup}
-            style={{ color: "#06b6d4", cursor: "pointer", fontWeight: "600" }}
+            onClick={onSwitchToLogin}
+            style={{ color: "#10b981", cursor: "pointer", fontWeight: "600" }}
           >
-            Sign Up
+            Login
           </span>
         </p>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Login from "./Login";
+import Signup from "./Signup";
 import "./App.css";
 import ManualEntry from "./ManualEntry";
 import Results from "./Results";
@@ -9,6 +10,7 @@ import Premium from "./Premium";
 
 export default function App() {
   const [userName, setUserName] = useState("");
+  const [authScreen, setAuthScreen] = useState("login"); // login or signup
   const [currentScreen, setCurrentScreen] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +69,20 @@ export default function App() {
   };
 
   if (!userName) {
-    return <Login />;
+    if (authScreen === "signup") {
+      return (
+        <Signup
+          onSignupSuccess={(name) => setUserName(name)}
+          onSwitchToLogin={() => setAuthScreen("login")}
+        />
+      );
+    }
+    return (
+      <Login
+        onLoginSuccess={(name) => setUserName(name)}
+        onSwitchToSignup={() => setAuthScreen("signup")}
+      />
+    );
   }
   if (isLoading) {
     return (
