@@ -426,6 +426,53 @@ export default function Records({ onBack }) {
               e.target.style.color = "#ef4444";
             }}
           >
+            {/* Export Button (Premium Only) */}
+            {todayRecords.length > 0 && (
+              <button
+                onClick={() => {
+                  const isPremium =
+                    localStorage.getItem("isPremium") === "true";
+                  if (!isPremium) {
+                    alert("⭐ Premium Feature! Upgrade to export your data.");
+                    return;
+                  }
+
+                  // Export as CSV
+                  const csv = todayRecords
+                    .map(
+                      (item) =>
+                        `${item.product.name},${
+                          item.product.calories
+                        },${new Date(item.timestamp).toLocaleString()}`
+                    )
+                    .join("\n");
+
+                  const blob = new Blob([`Food,Calories,Time\n${csv}`], {
+                    type: "text/csv",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "nutrition-records.csv";
+                  a.click();
+                  alert("✅ Exported successfully!");
+                }}
+                style={{
+                  width: "100%",
+                  padding: "16px",
+                  background: "linear-gradient(135deg, #fbbf24, #f97316)",
+                  border: "none",
+                  borderRadius: "12px",
+                  color: "white",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  marginBottom: "16px",
+                }}
+              >
+                📥 Export Records (Premium)
+              </button>
+            )}
             🗑️ Clear All Records
           </button>
         )}

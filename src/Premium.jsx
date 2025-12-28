@@ -1,4 +1,5 @@
 import React from "react";
+import PaymentModal from "./PaymentModal";
 
 export default function Premium({ onBack }) {
   const features = [
@@ -33,7 +34,7 @@ export default function Premium({ onBack }) {
       description: "Enjoy the app without any advertisements",
     },
   ];
-
+  const [showPayment, setShowPayment] = useState(false);
   return (
     <div
       style={{
@@ -143,9 +144,7 @@ export default function Premium({ onBack }) {
           </div>
 
           <button
-            onClick={() =>
-              alert("Premium coming soon! Stay tuned for launch date.")
-            }
+            onClick={() => setShowPayment(true)}
             style={{
               width: "100%",
               background: "linear-gradient(135deg, #fbbf24 0%, #f97316 100%)",
@@ -278,6 +277,16 @@ export default function Premium({ onBack }) {
           </div>
         </div>
       </div>
+      {showPayment && (
+        <PaymentModal
+          onClose={() => setShowPayment(false)}
+          onSuccess={() => {
+            localStorage.setItem("isPremium", "true");
+            alert("🎉 Payment Successful! You're now Premium!");
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 }

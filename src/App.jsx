@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from "react";
 import Login from "./Login";
-import Signup from "./Signup";
 import "./App.css";
 import ManualEntry from "./ManualEntry";
 import Results from "./Results";
 import Scanner from "./Scanner";
 import Records from "./Records";
 import Premium from "./Premium";
+import Analytics from "./Analytics";
 
 export default function App() {
   const [userName, setUserName] = useState("");
-  const [authScreen, setAuthScreen] = useState("login"); // login or signup
+  const [isPremium, setIsPremium] = useState(false);
   const [currentScreen, setCurrentScreen] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const savedName = localStorage.getItem("userName");
+    const premiumStatus = localStorage.getItem("isPremium") === "true";
     if (savedName) {
       setUserName(savedName);
+      setIsPremium(premiumStatus);
     }
   }, []);
+
   // Calculate today's total from localStorage
   const getTodayTotal = () => {
     const saved = localStorage.getItem("foodHistory");
@@ -48,6 +52,7 @@ export default function App() {
     localStorage.removeItem("userName");
     setUserName("");
   };
+
   const saveToHistory = (product, method) => {
     try {
       const existing = localStorage.getItem("foodHistory");
@@ -69,21 +74,9 @@ export default function App() {
   };
 
   if (!userName) {
-    if (authScreen === "signup") {
-      return (
-        <Signup
-          onSignupSuccess={(name) => setUserName(name)}
-          onSwitchToLogin={() => setAuthScreen("login")}
-        />
-      );
-    }
-    return (
-      <Login
-        onLoginSuccess={(name) => setUserName(name)}
-        onSwitchToSignup={() => setAuthScreen("signup")}
-      />
-    );
+    return <Login />;
   }
+
   if (isLoading) {
     return (
       <div
@@ -127,6 +120,7 @@ export default function App() {
       />
     );
   }
+
   // Show Results screen
   if (currentScreen === "results" && selectedProduct) {
     return (
@@ -150,6 +144,7 @@ export default function App() {
       />
     );
   }
+
   // Show placeholder screens for other buttons
   if (currentScreen === "scanner") {
     return (
@@ -173,11 +168,17 @@ export default function App() {
       />
     );
   }
+
   if (currentScreen === "records") {
     return <Records onBack={() => setCurrentScreen("home")} />;
   }
+
   if (currentScreen === "premium") {
     return <Premium onBack={() => setCurrentScreen("home")} />;
+  }
+
+  if (currentScreen === "analytics") {
+    return <Analytics onBack={() => setCurrentScreen("home")} />;
   }
 
   return (
@@ -206,9 +207,26 @@ export default function App() {
                 fontSize: "28px",
                 fontWeight: "bold",
                 margin: "0 0 4px 0",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
               }}
             >
               Hello, {userName}! 👋
+              {isPremium && (
+                <span
+                  style={{
+                    background: "linear-gradient(135deg, #fbbf24, #f97316)",
+                    padding: "4px 12px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    color: "white",
+                  }}
+                >
+                  👑 PREMIUM
+                </span>
+              )}
             </h1>
             <p
               style={{
@@ -433,10 +451,89 @@ export default function App() {
           </div>
         </div>
 
+        {/* Analytics Button with Animation */}
+        <div
+          className="animate-slide-in"
+          onClick={() => setCurrentScreen("analytics")}
+          style={{
+            background: "white",
+            borderRadius: "16px",
+            padding: "24px",
+            marginBottom: "16px",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            cursor: "pointer",
+            border: "2px solid transparent",
+            transition: "all 0.2s",
+            animationDelay: "0.25s",
+            position: "relative",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow =
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1)";
+            e.currentTarget.style.borderColor = "#8b5cf6";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow =
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+            e.currentTarget.style.borderColor = "transparent";
+          }}
+        >
+          {!isPremium && (
+            <div
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                background: "linear-gradient(135deg, #fbbf24, #f97316)",
+                padding: "4px 8px",
+                borderRadius: "12px",
+                fontSize: "10px",
+                fontWeight: "bold",
+                color: "white",
+              }}
+            >
+              👑 PREMIUM
+            </div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div
+              style={{
+                background: "#ede9fe",
+                padding: "16px",
+                borderRadius: "12px",
+                fontSize: "32px",
+              }}
+            >
+              📈
+            </div>
+            <div>
+              <h3
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  margin: "0 0 4px 0",
+                }}
+              >
+                Weekly Analytics
+              </h3>
+              <p style={{ color: "#6b7280", margin: 0, fontSize: "14px" }}>
+                Track your nutrition trends
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Premium Button with Animation */}
         <div
           className="animate-slide-in"
-          onClick={() => setCurrentScreen("premium")}
+          onClick={() => {
+            if (isPremium) {
+              alert("You're already Premium! 🎉");
+            } else {
+              setCurrentScreen("premium");
+            }
+          }}
           style={{
             background: "linear-gradient(to right, #fbbf24, #f97316)",
             borderRadius: "16px",
@@ -484,7 +581,8 @@ export default function App() {
           </div>
         </div>
       </div>
-      {/* ADD FOOTER HERE! */}
+
+      {/* Footer */}
       <div
         style={{
           textAlign: "center",

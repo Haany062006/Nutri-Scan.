@@ -31,10 +31,31 @@ export default function Scanner({ onBack, onScanSuccess }) {
   };
 
   const handleManualEntry = () => {
-    // For testing - simulate scanning
-    const testBarcode = "8901725123456"; // Maggi barcode
-    setScannedCode(testBarcode);
+    const isPremium = localStorage.getItem("isPremium") === "true";
+    const scansToday = localStorage.getItem("scansToday") || "0";
+    const lastScanDate = localStorage.getItem("lastScanDate");
+    const today = new Date().toDateString();
 
+    // Reset count if new day
+    if (lastScanDate !== today) {
+      localStorage.setItem("scansToday", "0");
+      localStorage.setItem("lastScanDate", today);
+    }
+
+    // Check limit for free users
+    if (!isPremium && parseInt(scansToday) >= 5) {
+      alert(
+        "🔒 Daily scan limit reached! Upgrade to Premium for unlimited scans."
+      );
+      onBack();
+      return;
+    }
+
+    // Increment scan count
+    localStorage.setItem("scansToday", (parseInt(scansToday) + 1).toString());
+
+    const testBarcode = "8901725123456";
+    setScannedCode(testBarcode);
     setTimeout(() => {
       onScanSuccess(testBarcode);
     }, 1000);
