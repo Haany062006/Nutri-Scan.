@@ -7,6 +7,7 @@ import Scanner from "./Scanner";
 import Records from "./Records";
 import Premium from "./Premium";
 import Analytics from "./Analytics";
+import Signup from "./Signup";
 
 export default function App() {
   const [userName, setUserName] = useState("");
