@@ -5,23 +5,12 @@ export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError("Please fill all fields");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
       return;
     }
 
@@ -76,9 +65,9 @@ export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
               margin: "0 0 8px 0",
             }}
           >
-            Create Account
+            NutriScan
           </h1>
-          <p style={{ color: "#6b7280", margin: 0 }}>Join NutriScan Today</p>
+          <p style={{ color: "#6b7280", margin: 0 }}>Create Your Account</p>
         </div>
 
         {error && (
@@ -112,8 +101,6 @@ export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
             boxSizing: "border-box",
             outline: "none",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "#10b981")}
-          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
         />
 
         <input
@@ -131,34 +118,13 @@ export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
             boxSizing: "border-box",
             outline: "none",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "#10b981")}
-          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
         />
 
         <input
           type="password"
-          placeholder="Password (min 6 characters)"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px 16px",
-            border: "2px solid #d1d5db",
-            borderRadius: "8px",
-            fontSize: "16px",
-            marginBottom: "12px",
-            boxSizing: "border-box",
-            outline: "none",
-          }}
-          onFocus={(e) => (e.target.style.borderColor = "#10b981")}
-          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
-        />
-
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && handleSignup()}
           style={{
             width: "100%",
@@ -170,8 +136,6 @@ export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
             boxSizing: "border-box",
             outline: "none",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "#10b981")}
-          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
         />
 
         <button
@@ -190,12 +154,6 @@ export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
             transition: "all 0.2s",
             marginBottom: "16px",
           }}
-          onMouseEnter={(e) => {
-            if (!loading) e.target.style.background = "#059669";
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) e.target.style.background = "#10b981";
-          }}
         >
           {loading ? "Creating Account..." : "Sign Up"}
         </button>
@@ -211,7 +169,7 @@ export default function Signup({ onSignupSuccess, onSwitchToLogin }) {
           Already have an account?{" "}
           <span
             onClick={onSwitchToLogin}
-            style={{ color: "#10b981", cursor: "pointer", fontWeight: "600" }}
+            style={{ color: "#06b6d4", cursor: "pointer", fontWeight: "600" }}
           >
             Login
           </span>
